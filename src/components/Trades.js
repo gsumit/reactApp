@@ -6,7 +6,6 @@ class Portfolio extends Component {
     super();
     this.state = {
       stocks: [],
-      term: null,
       value: "",
     };
 
@@ -22,13 +21,12 @@ class Portfolio extends Component {
 
   handleClick(e) {
     if (e) e.preventDefault();
+
+    let symbol = this.state.value;
+    this.callAPI(symbol);
     this.setState({
       value: "",
-      term: this.state.value,
     });
-
-    let term = this.state.value;
-    this.callAPI(term);
   }
 
   componentDidMount() {
@@ -66,14 +64,13 @@ class Portfolio extends Component {
   }
 
   render() {
-    const value = this.state.value;
     return (
       <div>
         <br />
         <h2>Latest Stock Market Quote:</h2>
         <br />
         <SearchBar
-          value={value}
+          value={this.state.value}
           onChange={this.handleChange}
           onClick={this.handleClick}
         />
@@ -120,7 +117,7 @@ const StockList = (props) => {
 
   return (
     <table className="table table-sm table-bordered table-hover">
-      <thead class="thead-dark">
+      <thead className="thead-dark">
         <tr>
           <th>Stock</th>
           <th>Price</th>
