@@ -34,8 +34,6 @@ Task.getAllTask = function (result) {
       console.log("error: ", err);
       result(null, err);
     } else {
-      console.log("todos : ", res);
-
       result(null, res);
     }
   });

@@ -1,5 +1,11 @@
 import React, { Component } from "react";
 import _ from "lodash";
+import {
+  NotificationContainer,
+  NotificationManager,
+} from "react-notifications";
+import "react-notifications/lib/notifications.css";
+import Button from "react-bootstrap/Button";
 
 class Portfolio extends Component {
   constructor() {
@@ -11,6 +17,7 @@ class Portfolio extends Component {
 
     this.handleClick = this.handleClick.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.deleteTask = this.deleteTask.bind(this);
   }
 
   handleChange(e) {
@@ -24,6 +31,7 @@ class Portfolio extends Component {
 
     let symbol = this.state.value;
     this.callAPI(symbol);
+    this.addSymbol(symbol);
     this.setState({
       value: "",
     });
@@ -31,7 +39,7 @@ class Portfolio extends Component {
 
   componentDidMount() {
     //TODO: need to get saved list from aws and call for each
-    this.callAPI("IBM");
+    this.getAllSymbols();
   }
 
   callAPI(symbol) {
@@ -63,9 +71,66 @@ class Portfolio extends Component {
       });
   }
 
+  addSymbol(symbol) {
+    fetch(`http://${window.location.hostname}:3001/symbols`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ticker: symbol,
+      }),
+    })
+      .then((resp) => resp.json()) // Transform the data into json
+      .then((response) => {
+        NotificationManager.success("", "Added Successfully", 3000);
+      })
+      .catch((err) => {
+        console.log(err);
+        NotificationManager.error(
+          "Error message",
+          "Error adding.",
+          5000,
+          () => {
+            alert("callback");
+          }
+        );
+      });
+  }
+
+  deleteTask(symbol) {
+    fetch(`http://${window.location.hostname}:3001/symbols/${symbol}`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((resp) => resp.json()) // Transform the data into json
+      .then((response) => {
+        const newstocks = this.state.stocks.filter((stock) => {
+          return stock.symbol !== symbol;
+        });
+        this.setState({ stocks: newstocks });
+        NotificationManager.success("", "Deleted Successfully", 3000);
+      })
+      .catch((err) => {
+        console.log(err);
+        NotificationManager.error(
+          "Error message",
+          "Error deleting.",
+          5000,
+          () => {
+            alert("callback");
+          }
+        );
+      });
+  }
+
   render() {
     return (
-      <div>
+      <div className="col-sm-4">
         <br />
         <h2>Latest Stock Market Quote:</h2>
         <br />
@@ -74,9 +139,26 @@ class Portfolio extends Component {
           onChange={this.handleChange}
           onClick={this.handleClick}
         />
-        <StockList stockItems={this.state.stocks} />
+        <StockList stockItems={this.state.stocks} deletefn={this.deleteTask} />
+        <NotificationContainer />
       </div>
     );
+  }
+
+  getAllSymbols() {
+    fetch(`http://${window.location.hostname}:3001/symbols`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((resp) => resp.json()) // Transform the data into json
+      .then((response) => {
+        response.map((s) => this.callAPI(s.ticker));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }
 export default Portfolio;
@@ -111,18 +193,20 @@ const StockList = (props) => {
         price={stock.price}
         changepct={stock.changepct}
         date={stock.date}
+        deletefn={props.deletefn}
       />
     );
   });
 
   return (
-    <table className="table table-sm table-bordered table-hover">
+    <table className="table table-sm table-bordered table-hover" width="40">
       <thead className="thead-dark">
         <tr>
           <th>Stock</th>
           <th>Price</th>
           <th>changepct</th>
           <th>date</th>
+          <th>remove</th>
         </tr>
       </thead>
       <tbody>{stockItem}</tbody>
@@ -130,7 +214,7 @@ const StockList = (props) => {
   );
 };
 
-const StockListItem = (stock, props) => {
+const StockListItem = (stock) => {
   return (
     <tr className="StockListItem1">
       <td className="StockListItem_Symbol1">{stock.symbol}</td>
@@ -139,6 +223,14 @@ const StockListItem = (stock, props) => {
       </td>
       <td className="StockListItem_changepct1">{stock.changepct}</td>
       <td className="StockListItem_date1">{stock.date}</td>
+      <td>
+        <Button
+          onClick={() => stock.deletefn(stock.symbol)}
+          style={{ "background-color": "red", float: "left" }}
+        >
+          <i class="fa fa-trash" />
+        </Button>
+      </td>
     </tr>
   );
 };

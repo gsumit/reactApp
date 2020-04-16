@@ -3,7 +3,6 @@ var Task = require("../model/appModel.js");
 exports.list_all_tasks = function (req, res) {
   Task.getAllTask(function (err, task) {
     if (err) res.send(err);
-    console.log("res", task);
     res.send(task);
   });
 };

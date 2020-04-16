@@ -9,11 +9,11 @@ var mysql = require("mysql");
   password: "sumit123",
 });*/
 var connection = mysql.createConnection({
-  host: "mysql-1.cmjnvgfprurr.us-east-2.rds.amazonaws.com",
+  host: "mysqldb-4.cmjnvgfprurr.us-east-2.rds.amazonaws.com",
   port: 3306,
   user: "admin",
   database: "reactui",
-  password: "sumit123",
+  password: "ganBAL22",
 });
 
 connection.connect(function (err) {
